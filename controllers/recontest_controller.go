@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package controllers
 
 import (
 	"context"
@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	appv1alpha1 "github.com/anirudhAgniRedhat/recon-test-operator/api/v1alpha1"
+	examplev1alpha1 "github.com/anirudhAgniRedhat/recon-test-operator/api/v1alpha1"
 )
 
 // ReconTestReconciler reconciles a ReconTest object
@@ -33,9 +33,9 @@ type ReconTestReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=app.anirudh.io,resources=recontests,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=app.anirudh.io,resources=recontests/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=app.anirudh.io,resources=recontests/finalizers,verbs=update
+//+kubebuilder:rbac:groups=example.anirudh.io,resources=recontests,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=example.anirudh.io,resources=recontests/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=example.anirudh.io,resources=recontests/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -45,7 +45,7 @@ type ReconTestReconciler struct {
 // the user.
 //
 // For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *ReconTestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
@@ -57,6 +57,6 @@ func (r *ReconTestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 // SetupWithManager sets up the controller with the Manager.
 func (r *ReconTestReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&appv1alpha1.ReconTest{}).
+		For(&examplev1alpha1.ReconTest{}).
 		Complete(r)
 }

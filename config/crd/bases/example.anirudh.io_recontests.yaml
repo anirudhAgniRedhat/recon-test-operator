@@ -3,10 +3,11 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
-  name: recontests.app.anirudh.io
+    controller-gen.kubebuilder.io/version: v0.9.2
+  creationTimestamp: null
+  name: recontests.example.anirudh.io
 spec:
-  group: app.anirudh.io
+  group: example.anirudh.io
   names:
     kind: ReconTest
     listKind: ReconTestList
