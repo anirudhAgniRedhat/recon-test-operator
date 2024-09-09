@@ -1,0 +1,27 @@
+# permissions for end users to view recontests.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: recontest-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: recon-test-operator
+    app.kubernetes.io/part-of: recon-test-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: recontest-viewer-role
+rules:
+- apiGroups:
+  - app.anirudh.io
+  resources:
+  - recontests
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - app.anirudh.io
+  resources:
+  - recontests/status
+  verbs:
+  - get

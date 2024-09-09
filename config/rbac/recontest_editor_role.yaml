@@ -1,0 +1,31 @@
+# permissions for end users to edit recontests.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: recontest-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: recon-test-operator
+    app.kubernetes.io/part-of: recon-test-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: recontest-editor-role
+rules:
+- apiGroups:
+  - app.anirudh.io
+  resources:
+  - recontests
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - app.anirudh.io
+  resources:
+  - recontests/status
+  verbs:
+  - get
