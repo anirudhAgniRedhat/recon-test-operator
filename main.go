@@ -18,21 +18,21 @@ package main
 
 import (
 	"flag"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	examplev1alpha1 "github.com/anirudhAgniRedhat/recon-test-operator/api/v1alpha1"
+	"github.com/anirudhAgniRedhat/recon-test-operator/controllers"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
-	examplev1alpha1 "github.com/anirudhAgniRedhat/recon-test-operator/api/v1alpha1"
-	"github.com/anirudhAgniRedhat/recon-test-operator/controllers"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -86,6 +86,11 @@ func main() {
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
+		os.Exit(1)
+	}
+
+	if err := v1.AddToScheme(mgr.GetScheme()); err != nil {
+		setupLog.Error(err, "unable to add apiextensions/v1 to scheme")
 		os.Exit(1)
 	}
 
