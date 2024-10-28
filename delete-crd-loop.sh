@@ -4,7 +4,7 @@
 CRD_NAME="recontests.example.anirudh.io"
 
 # Interval in milliseconds (adjust as needed)
-INTERVAL_MS=500  # 500 milliseconds (0.5 seconds)
+INTERVAL_MS=100  # 500 milliseconds (0.5 seconds)
 
 # Convert milliseconds to seconds (sleep accepts seconds)
 INTERVAL=$(echo "$INTERVAL_MS / 1000" | bc -l)
