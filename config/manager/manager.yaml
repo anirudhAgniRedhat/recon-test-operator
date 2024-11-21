@@ -38,7 +38,7 @@ spec:
         - /manager
         args:
         - --leader-elect
-        image: quay.io/rh-ee-aagnihot/recon-test-operator:v0.7
+        image: quay.io/rh-ee-aagnihot/recon-test-operator:v1.0
         name: manager
         securityContext:
           allowPrivilegeEscalation: false
