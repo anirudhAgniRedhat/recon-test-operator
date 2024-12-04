@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Interval in milliseconds (adjust as needed)
-INTERVAL_MS=100  # 100 milliseconds
+INTERVAL_MS=10  # 100 milliseconds
 
 # Convert milliseconds to seconds (sleep accepts seconds)
 INTERVAL=$(echo "$INTERVAL_MS / 1000" | bc -l)

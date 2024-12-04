@@ -3,12 +3,12 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/go-logr/logr"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -28,68 +28,68 @@ type ReconTestReconciler struct {
 func (r *ReconTestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	// Generate and reconcile CRDs
-	return r.reconcileAllCRDs(ctx, logger)
+	// Generate and create CRDs
+	return r.createAllCRDs(ctx, logger)
 }
 
-// reconcileAllCRDs generates and ensures all CRDs are created
-func (r *ReconTestReconciler) reconcileAllCRDs(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
+// createAllCRDs generates and creates all CRDs
+func (r *ReconTestReconciler) createAllCRDs(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
 	// Number of CRDs to generate
 	numCRDs := 100
 
+	// Track if any creation errors occurred
+	var lastErr error
+
 	for i := 1; i <= numCRDs; i++ {
 		// Construct CRD name
-		crdName := fmt.Sprintf("recontests%d.example.anirudh.io", i)
+		crdName := fmt.Sprintf("complexrecontests%d.example.anirudh.io", i)
 
 		// Create CRD object
-		crd := r.generateCRD(i, crdName)
+		crd := r.generateComplexCRD(i, crdName)
 
-		// Check if CRD exists
-		existingCRD := &v1.CustomResourceDefinition{}
-		err := r.Get(ctx, types.NamespacedName{Name: crdName}, existingCRD)
-		if err != nil {
-			if errors.IsNotFound(err) {
-				// CRD doesn't exist, create it
-				logger.Info(fmt.Sprintf("Creating CRD: %s", crdName))
-				if createErr := r.Create(ctx, crd); createErr != nil {
-					logger.Error(createErr, fmt.Sprintf("Failed to create CRD %s", crdName))
-					return ctrl.Result{}, createErr
-				}
-				logger.Info(fmt.Sprintf("Successfully created CRD: %s", crdName))
-			} else {
-				// Other error occurred
-				logger.Error(err, fmt.Sprintf("Error checking CRD %s", crdName))
-				return ctrl.Result{}, err
-			}
+		// Attempt to create CRD
+		if err := r.Create(ctx, crd); err != nil {
+			logger.Error(err, fmt.Sprintf("Failed to create complex CRD: %s", crdName))
+			lastErr = err
 		} else {
-			// CRD exists, update if necessary
-			logger.Info(fmt.Sprintf("CRD %s already exists", crdName))
-
-			// Optionally, you can add update logic here if needed
-			// For example, comparing spec and updating if different
+			logger.Info(fmt.Sprintf("Successfully created complex CRD: %s", crdName))
 		}
 	}
 
-	return ctrl.Result{}, nil
+	// If there were any errors, requeue with a delay
+	if lastErr != nil {
+		return ctrl.Result{
+			Requeue:      true,
+			RequeueAfter: time.Second * 30, // Requeue after 30 seconds to retry failed CRD creations
+		}, lastErr
+	}
+
+	// Continuously requeue to keep trying to create CRDs
+	return ctrl.Result{
+		Requeue:      true,
+		RequeueAfter: time.Minute * 1, // Requeue every 5 minutes
+	}, nil
 }
 
-// generateCRD creates a CustomResourceDefinition for a specific index
-func (r *ReconTestReconciler) generateCRD(index int, crdName string) *v1.CustomResourceDefinition {
+// generateComplexCRD creates a highly nested CustomResourceDefinition
+func (r *ReconTestReconciler) generateComplexCRD(index int, crdName string) *v1.CustomResourceDefinition {
 	return &v1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: crdName,
 			Labels: map[string]string{
-				"generated-by": "recontest-controller",
+				"generated-by": "complex-recontest-controller",
+				"complexity":   "high",
 				"index":        fmt.Sprintf("%d", index),
+				"timestamp":    fmt.Sprintf("%d", time.Now().Unix()),
 			},
 		},
 		Spec: v1.CustomResourceDefinitionSpec{
-			Group: "example.anirudh.io",
+			Group: "complex.example.anirudh.io",
 			Names: v1.CustomResourceDefinitionNames{
-				Kind:     fmt.Sprintf("Recontest%d", index),
-				ListKind: fmt.Sprintf("Recontest%dList", index),
-				Plural:   fmt.Sprintf("recontests%d", index),
-				Singular: fmt.Sprintf("recontest%d", index),
+				Kind:     fmt.Sprintf("ComplexRecontest%d", index),
+				ListKind: fmt.Sprintf("ComplexRecontest%dList", index),
+				Plural:   fmt.Sprintf("complexrecontests%d", index),
+				Singular: fmt.Sprintf("complexrecontest%d", index),
 			},
 			Scope: v1.NamespaceScoped,
 			Versions: []v1.CustomResourceDefinitionVersion{
@@ -104,22 +104,190 @@ func (r *ReconTestReconciler) generateCRD(index int, crdName string) *v1.CustomR
 								"spec": {
 									Type: "object",
 									Properties: map[string]v1.JSONSchemaProps{
-										// Add any specific validation you need
-										"description": {
-											Type: "string",
+										"organization": {
+											Type: "object",
+											Properties: map[string]v1.JSONSchemaProps{
+												"name": {
+													Type: "string",
+												},
+												"foundedYear": {
+													Type:    "integer",
+													Minimum: float64Ptr(1800.0),
+													Maximum: float64Ptr(2100.0),
+												},
+												"address": {
+													Type: "object",
+													Properties: map[string]v1.JSONSchemaProps{
+														"street": {
+															Type: "string",
+														},
+														"city": {
+															Type: "string",
+														},
+														"state": {
+															Type: "string",
+														},
+														"postalCode": {
+															Type:    "string",
+															Pattern: `^\d{5}(-\d{4})?$`, // US Zip code pattern
+														},
+														"geoLocation": {
+															Type: "object",
+															Properties: map[string]v1.JSONSchemaProps{
+																"latitude": {
+																	Type:    "number",
+																	Minimum: float64Ptr(-90.0),
+																	Maximum: float64Ptr(90.0),
+																},
+																"longitude": {
+																	Type:    "number",
+																	Minimum: float64Ptr(-180.0),
+																	Maximum: float64Ptr(180.0),
+																},
+															},
+															Required: []string{"latitude", "longitude"},
+														},
+													},
+													Required: []string{"street", "city", "state"},
+												},
+												"departments": {
+													Type: "array",
+													Items: &v1.JSONSchemaPropsOrArray{
+														Schema: &v1.JSONSchemaProps{
+															Type: "object",
+															Properties: map[string]v1.JSONSchemaProps{
+																"name": {
+																	Type: "string",
+																},
+																"headCount": {
+																	Type:    "integer",
+																	Minimum: float64Ptr(0.0),
+																},
+																"budget": {
+																	Type: "object",
+																	Properties: map[string]v1.JSONSchemaProps{
+																		"annual": {
+																			Type:    "number",
+																			Minimum: float64Ptr(0.0),
+																		},
+																		"currency": {
+																			Type: "string",
+																			Enum: []v1.JSON{
+																				{Raw: []byte(`"USD"`)},
+																				{Raw: []byte(`"EUR"`)},
+																				{Raw: []byte(`"GBP"`)},
+																				{Raw: []byte(`"JPY"`)},
+																			},
+																		},
+																	},
+																	Required: []string{"annual", "currency"},
+																},
+															},
+															Required: []string{"name", "headCount"},
+														},
+													},
+												},
+											},
+											Required: []string{"name", "foundedYear"},
 										},
-										"count": {
-											Type: "integer",
+										"projectMetadata": {
+											Type: "object",
+											Properties: map[string]v1.JSONSchemaProps{
+												"projectId": {
+													Type: "string",
+												},
+												"status": {
+													Type: "string",
+													Enum: []v1.JSON{
+														{Raw: []byte(`"planning"`)},
+														{Raw: []byte(`"in-progress"`)},
+														{Raw: []byte(`"completed"`)},
+														{Raw: []byte(`"on-hold"`)},
+													},
+												},
+												"resources": {
+													Type: "array",
+													Items: &v1.JSONSchemaPropsOrArray{
+														Schema: &v1.JSONSchemaProps{
+															Type: "object",
+															Properties: map[string]v1.JSONSchemaProps{
+																"type": {
+																	Type: "string",
+																},
+																"quantity": {
+																	Type:    "integer",
+																	Minimum: float64Ptr(0.0),
+																},
+																"details": {
+																	Type: "object",
+																	AdditionalProperties: &v1.JSONSchemaPropsOrBool{
+																		Allows: true,
+																	},
+																},
+															},
+															Required: []string{"type", "quantity"},
+														},
+													},
+												},
+												"timeline": {
+													Type: "object",
+													Properties: map[string]v1.JSONSchemaProps{
+														"startDate": {
+															Type:   "string",
+															Format: "date",
+														},
+														"endDate": {
+															Type:   "string",
+															Format: "date",
+														},
+														"milestones": {
+															Type: "array",
+															Items: &v1.JSONSchemaPropsOrArray{
+																Schema: &v1.JSONSchemaProps{
+																	Type: "object",
+																	Properties: map[string]v1.JSONSchemaProps{
+																		"name": {
+																			Type: "string",
+																		},
+																		"completionDate": {
+																			Type:   "string",
+																			Format: "date",
+																		},
+																		"dependencies": {
+																			Type: "array",
+																			Items: &v1.JSONSchemaPropsOrArray{
+																				Schema: &v1.JSONSchemaProps{
+																					Type: "string",
+																				},
+																			},
+																		},
+																	},
+																	Required: []string{"name", "completionDate"},
+																},
+															},
+														},
+													},
+													Required: []string{"startDate", "endDate"},
+												},
+											},
+											Required: []string{"projectId", "status"},
 										},
 									},
+									Required: []string{"organization", "projectMetadata"},
 								},
 							},
+							Required: []string{"spec"},
 						},
 					},
 				},
 			},
 		},
 	}
+}
+
+// Helper function to create float64 pointers
+func float64Ptr(f float64) *float64 {
+	return &f
 }
 
 // SetupWithManager sets up the controller with the Manager.
