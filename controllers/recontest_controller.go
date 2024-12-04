@@ -8,6 +8,9 @@ import (
 	"github.com/go-logr/logr"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -44,11 +47,21 @@ func (r *ReconTestReconciler) createAllCRDs(ctx context.Context, logger logr.Log
 		// Construct CRD name
 		crdName := fmt.Sprintf("complexrecontests%d.example.anirudh.io", i)
 
+		logger.Info(fmt.Sprintf("Creating CRD %s", crdName))
+
 		// Create CRD object
 		crd := r.generateComplexCRD(i, crdName)
 
 		// Attempt to create CRD
 		if err := r.Create(ctx, crd); err != nil {
+			// Check if the error is due to the CRD already existing
+			if apierrors.IsAlreadyExists(err) {
+				// Log that the CRD already exists
+				logger.Info(fmt.Sprintf("CRD already exists: %s", crdName))
+				continue // Move to the next CRD
+			}
+
+			// Log other errors
 			logger.Error(err, fmt.Sprintf("Failed to create complex CRD: %s", crdName))
 			lastErr = err
 		} else {
@@ -73,9 +86,12 @@ func (r *ReconTestReconciler) createAllCRDs(ctx context.Context, logger logr.Log
 
 // generateComplexCRD creates a highly nested CustomResourceDefinition
 func (r *ReconTestReconciler) generateComplexCRD(index int, crdName string) *v1.CustomResourceDefinition {
+	plural := fmt.Sprintf("complexrecontests%d", index) // spec.names.plural
+	group := "example.anirudh.io"                       // spec.group
+
 	return &v1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: crdName,
+			Name: fmt.Sprintf("%s.%s", plural, group), // Ensure name is in the correct format
 			Labels: map[string]string{
 				"generated-by": "complex-recontest-controller",
 				"complexity":   "high",
@@ -84,11 +100,11 @@ func (r *ReconTestReconciler) generateComplexCRD(index int, crdName string) *v1.
 			},
 		},
 		Spec: v1.CustomResourceDefinitionSpec{
-			Group: "complex.example.anirudh.io",
+			Group: group,
 			Names: v1.CustomResourceDefinitionNames{
 				Kind:     fmt.Sprintf("ComplexRecontest%d", index),
 				ListKind: fmt.Sprintf("ComplexRecontest%dList", index),
-				Plural:   fmt.Sprintf("complexrecontests%d", index),
+				Plural:   plural,
 				Singular: fmt.Sprintf("complexrecontest%d", index),
 			},
 			Scope: v1.NamespaceScoped,
