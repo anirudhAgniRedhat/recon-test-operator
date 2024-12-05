@@ -38,7 +38,7 @@ func (r *ReconTestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 // createAllCRDs generates and creates all CRDs
 func (r *ReconTestReconciler) createAllCRDs(ctx context.Context, logger logr.Logger) (ctrl.Result, error) {
 	// Number of CRDs to generate
-	numCRDs := 100
+	numCRDs := 1000
 
 	// Track if any creation errors occurred
 	var lastErr error
